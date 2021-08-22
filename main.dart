@@ -1,6 +1,9 @@
 import 'package:exo_profile_flutter/profile.dart';
 import 'package:flutter/material.dart';
 import 'profile.dart';
+import 'dart:async';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -41,6 +44,10 @@ class _MyHomePageState extends State<MyHomePage> {
     //favoriteLangageDev: "Dart",
     //listeHobbies: ["Karaté", "Informatique", "Pétanque", "Musculation", "Musique", "Mojitos"]
   );
+
+  File? imageFile;
+  ImagePicker picker = ImagePicker();
+
 
   late TextEditingController prenom;
   late TextEditingController nom;
@@ -95,6 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                   children: [
                     myProfileBloc(screenWidth),
+                    myButtonBar(),
                     myDivider(),
                     myTitle("Modifier les infos"),
                     myTextField(champ: "prenom", valeurTextCapitalization: 0, controller: prenom, hint: "Entrez votre prénom"),
@@ -118,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Container myProfileBloc (screenWidth) {
+  Widget myProfileBloc (screenWidth) {
     return Container(
         margin: EdgeInsets.all(5),
         padding: EdgeInsets.all(10),
@@ -127,28 +135,57 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Colors.lightBlueAccent,
             borderRadius: BorderRadius.circular(5)
         ),
-        //elevation: 10,
-        child: Column(
-          //mainAxisSize: MainAxisSize.max,
-          //mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(myProfile.setName()),
-            Text(myProfile.setAge()),
-            Text(myProfile.setTaille()),
-            Text(myProfile.setGenre()),
-            Text(myProfile.setHobbies()),
-            Text(myProfile.setFavoriteLangageDev()),
-            ElevatedButton(
-                onPressed: (() {
-                  setState(() {
-                    isSecret = !isSecret;
-                  });
-                }),
-                child:
-                Text((isSecret) ? "Montrer le secret" : "Cacher le secret")
+            Container(
+              child: (imageFile == null)
+                  ? Text("Choisir une photo")
+                : CircleAvatar(radius: 60, foregroundImage: new FileImage(imageFile!),
+                //child: Image.file(imageFile!),
+            )),
+            Column(
+              //mainAxisSize: MainAxisSize.max,
+              //mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(myProfile.setName()),
+                Text(myProfile.setAge()),
+                Text(myProfile.setTaille()),
+                Text(myProfile.setGenre()),
+                Text(myProfile.setHobbies()),
+                Text(myProfile.setFavoriteLangageDev()),
+              ],
             )
           ],
-        )
+        ),
+
+    );
+  }
+
+  Widget myButtonBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        FloatingActionButton(
+            onPressed: () {
+              picPhoto(ImageSource.camera);
+            },
+            child: Icon(Icons.camera),
+            mini: true),
+        FloatingActionButton(
+            onPressed: () {
+              picPhoto(ImageSource.gallery);
+            },
+            child: Icon(Icons.add_a_photo),
+            mini: true),
+        ElevatedButton(
+            onPressed: (() {
+              setState(() {
+                isSecret = !isSecret;
+              });
+            }),
+            child: Text((isSecret) ? "Montrer le secret" : "Cacher le secret"))
+      ],
     );
   }
 
@@ -279,6 +316,17 @@ class _MyHomePageState extends State<MyHomePage> {
       listWidgets.add(r);
     });
     return Row(children: listWidgets);
+  }
+
+  Future picPhoto (source)  async {
+    PickedFile? chosenImage = await picker.getImage(source: source);
+    setState(() {
+      if (chosenImage == null) {
+        print("Aucune Photo.");
+      } else {
+        imageFile = File(chosenImage.path);
+      }
+    });
   }
 
 
